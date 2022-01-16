@@ -4,6 +4,8 @@
 //https://medium.com/@andrey.dobra/web-testing-using-selenium-webdriver-part-4-adding-javascript-node-js-and-mocha-656df2a12787
 //https://stackoverflow.com/questions/17385779/how-do-i-load-a-javascript-file-into-the-dom-using-selenium/17387127
 
+//const { html } = require("cheerio/lib/api/manipulation");
+//const { Console } = require("console");
 
 //const { fstat } = require("fs-extra");
 
@@ -270,6 +272,12 @@ tabToOpen
         function getAll() {
             //driver.get(urlauth);
             console.log("GetPage")
+
+            driver.executeScript("var s=window.document.createElement('script');\
+                s.src='https://code.jquery.com/jquery-3.6.0.min.js';\
+                window.document.body.appendChild(s);");            
+
+            
             let getData = async(url) => {
                 await driver.get(url);
                 //const window = new Window();
@@ -541,6 +549,8 @@ tabToOpen
                     }                  
                     //readActivities()
                     //saveActivities()
+                    //updateDownload(cloneData)
+
                 }
                    
                 function loadActivities3(json){
@@ -676,7 +686,7 @@ tabToOpen
                     //driver.executeScript(`arguments[0].innerHTML = ` + `'New Items: ${data.length}'`, elm4)
                 }
                 //saveActivities()
-                
+
                 showActivities(cloneData)
 
             }
@@ -745,6 +755,7 @@ tabToOpen
 
                     //console.log("Mostrar atividades")
                     //console.log(cloneData2)
+                    //console.log(result)
 
                     elm2 = driver.findElement(By.id("sumWrapper"))
                     //let htmlTable = ''
@@ -801,7 +812,7 @@ tabToOpen
                     //htmlScript = `<script src='C:/Users/ferrelm/Backend Developement/JavaScript/10.3_WebScraperSelenium/web-scraper-selenium/script.js'></script>`
 
 
-
+/*
                     //In order to fetch a local script it is necessary to provide it through a server, in order to circunvent chrome security
                     const FileServer = require('file-server');
 
@@ -810,8 +821,8 @@ tabToOpen
                         response.end(error);
                     });
                     
-                    serveScriptsDirectory = fileServer.serveDirectory('C:/Users/ferrelm/Backend Developement/JavaScript/10.3_WebScraperSelenium/web-scraper-selenium/scripts', {
-                        '.js': 'text/plain',
+                    serveScriptsDirectory = fileServer.serveDirectory('C:/Users/ferrelm/Backend Developement/JavaScript/10.5_WebScraperSelenium/web-scraper-selenium/scripts', {
+                        '.js': 'text/javascript;charset=UTF-8',
                     })
 
                     //const serveScript = fileServer.serveFile('C:/Users/ferrelm/Backend Developement/JavaScript/10.3_WebScraperSelenium/web-scraper-selenium/script.js', 'text/plain');
@@ -819,6 +830,23 @@ tabToOpen
                     require('http')
                         .createServer(serveScriptsDirectory)
                         .listen(8081);
+*/
+
+                        const http = require('http');
+                        const fs = require('fs-extra');
+                        
+                        //create a server object:
+                        http.createServer(function (req, res) {
+                            fs.readFile('./scripts/script.js', function(err, data) {
+                                res.writeHead(200, {'Content-Type': 'text/javascript;charset=UTF-8'});
+                                res.write(data);
+                                //App.app();
+                                return res.end();
+                              });
+                        }).listen(8081)
+                        
+
+
 
                     // Read the script from localhost
                     driver.executeScript("var s=window.document.createElement('script');\
@@ -849,10 +877,82 @@ tabToOpen
                     $("#dlLink").attr('href', encodedUri).attr('download', filename);
                     */
 
+                    updateDownload(cloneData)
 
                 }
 
             }
+
+            
+            function updateDownload(cloneData){
+
+                console.log("Prepare CSV Button")
+                elm = driver.findElement(By.id("sumapp"))
+                let getData = async() => {
+                    //return await driver.getPageSource();
+                    //elm = await driver.findElement(By.id("sumapp"))
+                    return await driver.executeScript(`return arguments[0].innerHTML`, elm)
+                }
+                (async () => {
+                    page = await getData(elm)
+                    //console.log(await data)
+                    vamos(await page)
+                  })()
+                  
+                function vamos(page) {
+                
+                page = "<body>"+ page +"</body>";
+                console.log(page)
+                //var $ = require( "jquery" );
+                const { JSDOM } = require( "jsdom" );
+                const { window } = new JSDOM( page );
+                const $ = require( "jquery" )( window );
+
+                //var htmlString = $( this ).html();
+                //console.log(htmlString)
+                //$( this ).text( htmlString );
+              
+                var csvContent = "data:text/csv;charset=utf-8,"
+                csvContent += "Type,Location,Name,Date,Distance,Pace,Unit,Duration,Elev,EstPace,EstSpeed\r\n"
+            
+                cloneData.map(a => {
+                    csvContent += `"${a.type}","${a.location}","${a.name}","${a.time}","${a.distance}","${a.pace}","${a.unit}","${a.duration}","${a.elev}","${a.estPace}","${a.estSpeed}"\r\n`;
+                })
+            
+                //console.log(csvContent)
+                var encodedUri = encodeURI(csvContent);
+                //console.log(encodedUri)
+                var d = new Date();
+                var filename = `data-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}-${d.getHours()}.csv`
+                //console.log($("#dlLink").attr("href"))
+                
+                //elm5 = driver.findElement(By.id("dlLink"))
+                //driver.executeScript(`arguments[0].setAttribute('href', arguments[1])`, elm5, encodedUri)
+                //driver.executeScript(`arguments[0].setAttribute('download', arguments[1])`, elm5, filename)
+
+                $("#dlLink").attr('href', encodedUri).attr('download', filename);
+                //console.log($("#dlLink").attr("href"))
+
+                //var activities = $('div[data-react-class=Activity], div[data-react-class=GroupActivity]')
+                var activities = $('#itemCounts')
+                console.log(activities.length)
+
+                /*
+                $(function () {
+                    $('body').show();
+                });
+                */
+
+                htmlFinal = $("body").html()
+                console.log(htmlFinal)
+                htmlFinal = '`' + htmlFinal + '`'
+                driver.executeScript(`arguments[0].innerHTML = ` + htmlFinal, elm)
+
+                }
+            }
+             
+
+
     
         }
         //driver.close()
