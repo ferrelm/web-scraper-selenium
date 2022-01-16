@@ -13,6 +13,7 @@
 //const { setDefaultService } = require("selenium-webdriver/chrome");
 
 
+//<button class='btn btn-primary' type="button" onClick="callScript()">Click Me</button>
 
 //Template to prepend inside html body
 htmlTemplate = `
@@ -51,11 +52,11 @@ htmlTemplate = `
         <div style="height: 50px;">
             <a id='dlLink' class='btn btn-primary' href='#'>Download csv</a>
 
-            <button class='btn btn-primary' type="button" onClick="callScript()">Click Me</button>
+            <button class='btn btn-primary' type="button" onclick="document.getElementById('sumapp').style.display='none';document.getElementById('sumapp2').style.display='block'">Stats</button>
 
             <input type="button" class="btn btn-default float-right" value="X" onClick="document.getElementById('sumapp').style.display='none'" >
-            <div id="itemCounts" class="float-right" style="padding-top: 10px; padding-right: 10px">Items: 0</div>
             <div id="newItemCounts" class="float-right" style="padding-top: 10px; padding-right: 10px">New Items: 0</div>
+            <div id="itemCounts" class="float-right" style="padding-top: 10px; padding-right: 10px">Items: 0</div>
         </div>
         <div style="height: calc(100% - 80px);overflow:auto;" >
             <div id="sumWrapper">
@@ -68,6 +69,30 @@ htmlTemplate = `
         </center>
 
     </div>
+</div>
+
+<input type="hidden" id="mycmd2" value="">
+<div id="sumapp2" style="z-index: 1000002;background-color:  #00000069; position: fixed; top: 0px; right: 0px; bottom: 0px; left: 0px; height: 100vh; padding: 50px 50px 50px 50px; display:none" class="">
+    <div style="width: auto; height: calc(100vh - 150px); background-color: whitesmoke; padding: 20px;">
+
+        <center>
+        <div class='float-left' style="margin-top: 10px">Longest Run <b>&</b> Fastest Run</div>
+        </center>
+
+        <div style="height: 50px;">
+            <button class='btn btn-primary' type="button" onclick="document.getElementById('sumapp2').style.display='none';document.getElementById('sumapp').style.display='block'">Return</button>
+            <input type="button" class="btn btn-default float-right" value="X" onClick="document.getElementById('sumapp2').style.display='none'" >
+
+        </div>
+        <div style="height: calc(100% - 80px);overflow:auto;" >
+            <div id="sumWrapper2">
+            <table id="extable2" style="width: 100%;"><tr><td></td><td><b>Name</b></td><td><b>Date</b></td><td><b>Distance</b></td><td><b>Pace</b></td><td><b>Unit</b></td><td><b>Time</b></td><td><b>Elev</b></td><td></td></tr>
+            </table>
+            </div>
+        </div>
+
+    </div>
+
 
 </div>`
 
@@ -332,7 +357,7 @@ tabToOpen
     
             function loadActivities(activities){
                 //window.scrollTo(0,document.body.scrollHeight);
-                console.log("Number of activities: ", activities.length)
+                console.log("Number of individual and group activities: ", activities.length)
     
                 activities.forEach((json, i) => {
     
@@ -523,7 +548,7 @@ tabToOpen
                         loadActivities3(json)
                     })
 
-                    //console.log(data2)
+                    console.log("Activities fetched from API:", data2.length)
                     //dataWrite(data)
                     mergeActivities(data2)
 
@@ -774,6 +799,27 @@ tabToOpen
                     driver.executeScript(`arguments[0].innerHTML = ` + htmlTable, elm2)
                     //console.log(htmlTable)
 
+                    // Obtain the longest distance
+                    console.log("Obtain the longest distance")
+                    cloneData2 = [...cloneData];
+                    cloneData2.sort((a, b) => { return b.distance - a.distance })
+                    console.log(cloneData2[0])
+                    a = cloneData2[0]
+                    var htmlTable2 = `<table id='extable2' style='width:100%'><tr><td></td><td><b>Location</b></td><td><b>Name</b></td><td><b>Date</b></td><td><b>Distance</b></td><td><b>Pace</b></td><td><b>Unit</b></td><td><b>Time</b></td><td><b>Elev</b></td><td style='color: red'><b>Est Pace</b></td><td style='color:red'><b>Est Speed</b></td></tr>`       
+                    htmlTable2 += `<tr id='${a.activityId}' style='height:40px'><td><a href='https://www.strava.com/activities/${a.activityId}' target='_blank'>${a.type}</a></td><td>${a.location}</td><td>${a.name}</td><td>${(new Date(a.time)).toLocaleString()}</td><td class='distance'>${a.distance}</td><td class='pace'>${a.pace}</td><td class='unit'>${a.unit}</td><td class='duration'>${a.duration}</td><td class='elev'>${a.elev}</td><td>${a.estPace}</td><td>${a.estSpeed}</td></tr>`
+                    //elm0 = driver.findElement(By.id("sumWrapper2"))
+                    //driver.executeScript(`arguments[0].innerHTML = arguments[1]`, elm0, htmlTable2)
+
+                    // Obtain the highest elevation
+                    console.log("Obtain the highest elevation")
+                    cloneData3 = [...cloneData];
+                    cloneData3.sort((a, b) => { return b.estSpeed - a.estSpeed })
+                    console.log(cloneData3[0])
+                    a = cloneData3[0]
+                    //var htmlTable2 = `<table id='extable2' style='width:100%'><tr><td></td><td><b>Location</b></td><td><b>Name</b></td><td><b>Date</b></td><td><b>Distance</b></td><td><b>Pace</b></td><td><b>Unit</b></td><td><b>Time</b></td><td><b>Elev</b></td><td style='color: red'><b>Est Pace</b></td><td style='color:red'><b>Est Speed</b></td></tr>`       
+                    htmlTable2 += `<tr id='${a.activityId}' style='height:40px'><td><a href='https://www.strava.com/activities/${a.activityId}' target='_blank'>${a.type}</a></td><td>${a.location}</td><td>${a.name}</td><td>${(new Date(a.time)).toLocaleString()}</td><td class='distance'>${a.distance}</td><td class='pace'>${a.pace}</td><td class='unit'>${a.unit}</td><td class='duration'>${a.duration}</td><td class='elev'>${a.elev}</td><td>${a.estPace}</td><td>${a.estSpeed}</td></tr>`
+                    elm0 = driver.findElement(By.id("sumWrapper2"))
+                    driver.executeScript(`arguments[0].innerHTML = arguments[1]`, elm0, htmlTable2)
 
                     /*
                     htmlScript = `            
@@ -902,7 +948,7 @@ tabToOpen
                 function vamos(page) {
                 
                 page = "<body>"+ page +"</body>";
-                console.log(page)
+                //console.log(page)
                 //var $ = require( "jquery" );
                 const { JSDOM } = require( "jsdom" );
                 const { window } = new JSDOM( page );
@@ -918,7 +964,9 @@ tabToOpen
                 cloneData.map(a => {
                     csvContent += `"${a.type}","${a.location}","${a.name}","${a.time}","${a.distance}","${a.pace}","${a.unit}","${a.duration}","${a.elev}","${a.estPace}","${a.estSpeed}"\r\n`;
                 })
-            
+
+                
+
                 //console.log(csvContent)
                 var encodedUri = encodeURI(csvContent);
                 //console.log(encodedUri)
@@ -935,7 +983,7 @@ tabToOpen
 
                 //var activities = $('div[data-react-class=Activity], div[data-react-class=GroupActivity]')
                 var activities = $('#itemCounts')
-                console.log(activities.length)
+                //console.log(activities.length)
 
                 /*
                 $(function () {
@@ -944,16 +992,15 @@ tabToOpen
                 */
 
                 htmlFinal = $("body").html()
-                console.log(htmlFinal)
-                htmlFinal = '`' + htmlFinal + '`'
-                driver.executeScript(`arguments[0].innerHTML = ` + htmlFinal, elm)
+                //console.log(htmlFinal)
+                //htmlFinal = '`' + htmlFinal + '`'
+                //driver.executeScript(`arguments[0].innerHTML = ` + htmlFinal, elm)
+                driver.executeScript(`arguments[0].innerHTML = arguments[1]`, elm, htmlFinal)
 
+                console.log("The End")
                 }
             }
-             
-
-
-    
+                 
         }
         //driver.close()
 
